@@ -13,6 +13,7 @@ function App() {
     });
     const [status, setStatus] = useState(null); // { type: 'success' | 'error', message: '' }
     const [recentEvents, setRecentEvents] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
     // Fetch recent events
     const fetchEvents = async () => {
@@ -171,7 +172,7 @@ function App() {
                 <h2>Recent Events</h2>
                 <div className="events-list">
                     {recentEvents.map(evt => (
-                        <div key={evt.id} className="event-item">
+                        <div key={evt.id} className="event-item" onClick={() => setSelectedEvent(evt)}>
                             <strong>{evt.timestamp}</strong> - {evt.device_id} ({evt.source})
                             <br />
                             <small>{evt.payload.metrics.length} metrics. Note: {evt.payload.note}</small>
@@ -179,6 +180,47 @@ function App() {
                     ))}
                 </div>
             </div>
+
+            {selectedEvent && (
+                <div className="modal-overlay" onClick={() => setSelectedEvent(null)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Event Details</h2>
+                            <button className="modal-close" onClick={() => setSelectedEvent(null)}>&times;</button>
+                        </div>
+                        <div className="modal-body">
+                            <p><strong>ID:</strong> {selectedEvent.id}</p>
+                            <p><strong>Timestamp:</strong> {selectedEvent.timestamp}</p>
+                            <p><strong>Device ID:</strong> {selectedEvent.device_id}</p>
+                            <p><strong>Source:</strong> {selectedEvent.source}</p>
+
+                            <h3>Metrics</h3>
+                            <ul>
+                                {selectedEvent.payload.metrics.map((m, i) => (
+                                    <li key={i}>
+                                        <strong>{m.name}:</strong> {m.value} {m.unit}
+                                        {m.quality && <span style={{ marginLeft: '10px', fontSize: '0.8em', color: '#666' }}>({m.quality})</span>}
+                                    </li>
+                                ))}
+                            </ul>
+
+                            {selectedEvent.payload.tags && (
+                                <>
+                                    <h3>Tags</h3>
+                                    <pre>{JSON.stringify(selectedEvent.payload.tags, null, 2)}</pre>
+                                </>
+                            )}
+
+                            {selectedEvent.payload.note && (
+                                <>
+                                    <h3>Note</h3>
+                                    <p>{selectedEvent.payload.note}</p>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
